@@ -14,13 +14,28 @@ mongoc_collection_t *collection;
 
 // Initialize MongoDB
 void init_mongo() {
-    mongoc_init();
-    client = mongoc_client_new("mongodb://172.26.80.1:27017/");
+     mongoc_init();
+    
+    client = mongoc_client_new(DB_ADDRESS);
     if (!client) {
-        fprintf(stderr, "Failed to connect to MongoDB.\n");
+        fprintf(stderr, "Failed to create MongoDB client.\n");
         exit(EXIT_FAILURE);
     }
-    printf("Connection stablished!");
+
+
+    bson_t reply;
+    bson_error_t error;
+    if (!mongoc_client_get_server_status(client, NULL, &reply, &error)) {
+        fprintf(stderr, "MongoDB Connection Failed: %s\n", error.message);
+        bson_destroy(&reply);
+        mongoc_client_destroy(client);
+        exit(EXIT_FAILURE);
+    }
+    bson_destroy(&reply);
+
+    printf("Connection to MongoDB established successfully!\n");
+
+    // Select database and collection
     database = mongoc_client_get_database(client, "arquitecturas");
     collection = mongoc_client_get_collection(client, "arquis", "arqui");
 }
